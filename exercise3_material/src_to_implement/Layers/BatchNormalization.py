@@ -54,13 +54,15 @@ class BatchNormalization(BaseLayer):
     return norm_output
 
   def backward(self, error_tensor):
-    self.grad_weightsval = np.sum(error_tensor * self.input_tensor, axis=0)
+    self.grad_weightsval = np.sum(error_tensor * self.norm_input, axis=0)
     self.grad_biasval = np.sum(error_tensor, axis=0)
     if self.weightoptimizerval is not None:
       self.weights = self.weightoptimizerval.calculate_update(self.weights, self.grad_weightsval)
     if self.biasoptimizerval is not None:
       self.bias = self.biasoptimizer.calculate_update(self.bias, self.grad_biasval)
-    error_tensor_prev = compute_bn_gradients(error_tensor,self.input_tensor, self.weights, self.mean_batch, self.var_batch)
+    if error_tensor.ndim == 4:
+      error_tensor = self.reformat(error_tensor)  
+    error_tensor_prev = compute_bn_gradients(error_tensor,self.norm_input, self.weights, self.mean_batch, self.var_batch)
     if self.convflag :
       return self.reformat(error_tensor_prev)
     return error_tensor_prev
@@ -91,11 +93,11 @@ class BatchNormalization(BaseLayer):
     self.optimizerval = newval
 
   @property
-  def biasoptimizer(self):
+  def bias_optimizer(self):
     return self.biasoptimizer
   
-  @biasoptimizer.setter
-  def optimizer(self,newval):
+  @bias_optimizer.setter
+  def bias_optimizer(self,newval):
     self.biasoptimizer = newval
 
   @property
