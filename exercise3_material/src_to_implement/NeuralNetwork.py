@@ -1,6 +1,7 @@
 from Layers import *
 from Optimization import *
 import copy
+import pickle
 
 class NeuralNetwork:
   def __init__(self,optimizer,weights_initializer, bias_initializer):
@@ -12,6 +13,14 @@ class NeuralNetwork:
     self.bias_initializer = bias_initializer
     self.data_layer = None
     self.label_tensor = None
+
+  def __getstate__(self):
+    state = self.__dict__.copy()
+    del state['data_layer']
+    return state
+  
+  def __setstate__(self,state):
+    self.__dict__ = state
 
   def forward(self):
     input_tensor, self.label_tensor = self.data_layer.next()
@@ -54,3 +63,11 @@ class NeuralNetwork:
   def phase(self, newval):
     for layer in self.layers:
       layer.testing_phase = newval
+
+def save(filename, net):
+  pickle.dump(net, open(filename, 'wb'))
+
+def load(filename, data_layer):
+  net = pickle.load(open(filename))
+  net.data_layer = data_layer
+  return net
