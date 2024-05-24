@@ -6,7 +6,6 @@ class Dropout(BaseLayer):
     super().__init__()
     self.probability = probability
 
-
   def forward(self, input_tensor):
     if self.testing_phase:
       return input_tensor
@@ -16,5 +15,4 @@ class Dropout(BaseLayer):
   def backward(self, error_tensor):
     if self.testing_phase:
       return error_tensor
-    
     return error_tensor * self.mask / self.probability
