@@ -17,7 +17,6 @@ class Conv(BaseLayer):
     self.gradient_bias_val = None
     self.weightoptimizerval = None
     self.biasoptimizerval = None
-    self.output_tensor = None
   
   def forward(self, input_tensor):
     self.input_tensor = input_tensor #1D : [b c y] ; 2D:[b c y x]

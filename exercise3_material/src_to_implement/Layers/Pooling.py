@@ -7,7 +7,6 @@ class Pooling(BaseLayer):
     super().__init__()
     self.stride_shape = stride_shape
     self.pooling_shape = pooling_shape
-    self.input_tensor_shape = None
     self.max_pos = []
   
   def forward(self, input_tensor):
