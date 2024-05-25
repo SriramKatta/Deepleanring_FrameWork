@@ -67,8 +67,8 @@ class Conv(BaseLayer):
     for element_ctr, error_element in enumerate(upsampled_error):
         for error_channel_ctr, error_channel in enumerate(error_element):
             for input_channel_ctr in range(self.convolution_shape[0]):
-                self.gradient_weights_val[error_channel_ctr][input_channel_ctr] += \
-                    correlate(self.input_tensor[element_ctr][input_channel_ctr], error_channel, mode='valid')
+                self.gradient_weights_val[error_channel_ctr, input_channel_ctr] += \
+                    correlate(self.input_tensor[element_ctr, input_channel_ctr], error_channel, mode='valid')
             self.gradient_bias_val[error_channel_ctr] += np.sum(error_channel)
 
     if self.weightoptimizerval is not None :
