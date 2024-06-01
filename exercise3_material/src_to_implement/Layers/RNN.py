@@ -23,7 +23,9 @@ class RNN(BaseLayer):
     self.sig = Sigmoid()
     self.grad_weights = None
   
-  def initialize(self, weights_initializer, bias_initializer):
+  def initialize(self, weights_initializer=None, bias_initializer=None):
+    if weights_initializer is None or bias_initializer is None:
+      return
     self.fc1.initialize(weights_initializer, bias_initializer)
     self.fc2.initialize(weights_initializer, bias_initializer)
 
