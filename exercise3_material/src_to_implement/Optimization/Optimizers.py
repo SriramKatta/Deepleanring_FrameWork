@@ -36,6 +36,7 @@ class SgdWithMomentum(Optimizer):
 
 class Adam(Optimizer):
   def __init__(self, learning_rate, mu, rho):
+    super().__init__()
     self.learning_rate = learning_rate
     self.mu = mu
     self.rho = rho
