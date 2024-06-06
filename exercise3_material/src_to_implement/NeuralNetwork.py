@@ -26,12 +26,11 @@ class NeuralNetwork:
     input_tensor, self.label_tensor = self.data_layer.next()
     regloss = 0
     for layer in self.layers:
+      layer.testing_phase = False
       input_tensor = layer.forward(input_tensor)
-      if layer.trainable and layer.optimizer :
-        if layer.optimizer.regularizer :
-          regloss += layer.optimizer.regularizer.norm(layer.weights)
-          
-    return self.loss_layer.forward(input_tensor, self.label_tensor)
+      if self.optimizer.regularizer is not None and layer.trainable:
+        regloss += self.optimizer.regularizer.norm(layer.weights)
+    return self.loss_layer.forward(input_tensor, self.label_tensor) + regloss
 
   def backward(self):
     error_tensor = self.loss_layer.backward(self.label_tensor)
