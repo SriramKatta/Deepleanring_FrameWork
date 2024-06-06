@@ -13,4 +13,4 @@ class CrossEntropyLoss(BaseLayer):
     return loss_tensor
 
   def backward(self, label_tensor):
-    return -label_tensor / self.prediction_tensor
+    return -label_tensor / (self.prediction_tensor + np.finfo(float).eps)
