@@ -3,25 +3,26 @@ from Optimization import *
 import copy
 import pickle
 
+def save(filename, net):
+  pickle.dump(net, open(filename, 'wb'))
+
+def load(filename, data_layer):
+  net = pickle.load(open(filename))
+  net.data_layer = data_layer
+  return net
+
 class NeuralNetwork:
   def __init__(self,optimizer,weights_initializer, bias_initializer):
     self.optimizer = optimizer
     self.loss = []
     self.layers = []
-    self.loss_layer = []
+    self.loss_layer = None
     self.phaseval = None
     self.weights_initializer = copy.deepcopy(weights_initializer)
     self.bias_initializer = copy.deepcopy(bias_initializer)
     self.data_layer = None
     self.label_tensor = None
 
-  @property
-  def phase(self):
-    return self.phaseval
-  
-  @phase.setter
-  def phase(self, newval):
-    self.phaseval = newval
 
   def __getstate__(self):
     state = self.__dict__.copy()
@@ -54,11 +55,13 @@ class NeuralNetwork:
     self.layers.append(layer)
 
   def train(self, iter):
+    self.phase = False
     for _ in range(iter):
       self.loss.append(self.forward())
       self.backward()
     
   def test(self, input_tensor):
+    self.phase = True 
     for layer in self.layers:
       input_tensor = layer.forward(input_tensor)
     return input_tensor
@@ -71,11 +74,3 @@ class NeuralNetwork:
   def phase(self, newval):
     for layer in self.layers:
       layer.testing_phase = newval
-
-def save(filename, net):
-  pickle.dump(net, open(filename, 'wb'))
-
-def load(filename, data_layer):
-  net = pickle.load(open(filename))
-  net.data_layer = data_layer
-  return net
