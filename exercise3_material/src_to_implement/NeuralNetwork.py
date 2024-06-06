@@ -9,10 +9,19 @@ class NeuralNetwork:
     self.loss = []
     self.layers = []
     self.loss_layer = []
-    self.weights_initializer = weights_initializer
-    self.bias_initializer = bias_initializer
+    self.phaseval = None
+    self.weights_initializer = copy.deepcopy(weights_initializer)
+    self.bias_initializer = copy.deepcopy(bias_initializer)
     self.data_layer = None
     self.label_tensor = None
+
+  @property
+  def phase(self):
+    return self.phaseval
+  
+  @phase.setter
+  def phase(self, newval):
+    self.phaseval = newval
 
   def __getstate__(self):
     state = self.__dict__.copy()
