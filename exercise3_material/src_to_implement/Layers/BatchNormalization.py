@@ -18,11 +18,9 @@ class BatchNormalization(BaseLayer):
     self.var_batch = None
     self.optimizerval=None
 
-  def initialize(self, weights_initializer=None, bias_initializer=None):
-    if weights_initializer is not None:
-      self.weights = weights_initializer.initialize(self.weights.shape, self.weights.size)
-    if bias_initializer is not None:
-      self.bias = bias_initializer.initialize(self.bias.shape, self.bias.size)
+  def initialize(self):
+      self.weights = np.ones(self.channels)
+      self.bias = np.zeros(self.channels)
 
   def forward(self, input_tensor):
     if input_tensor.ndim == 4:
