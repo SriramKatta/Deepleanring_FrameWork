@@ -18,11 +18,10 @@ class FullyConnected(BaseLayer):
     return self.input_tensor @ self.weights    
 
   def backward(self, error_tensor):
-    err_prev = error_tensor@self.weights[:-1,:].T
-    self.gradient_weightsval = self.input_tensor.T@error_tensor
+    self.gradient_weightsval = self.input_tensor.T @ error_tensor
     if(self.optimizerval != None):
       self.weights = self.optimizer.calculate_update(self.weights, self.gradient_weights)
-    return err_prev
+    return error_tensor @ self.weights[:-1,:].T
 
   def calculate_update(self, weight_tensor, gradient_tensor):
     if(self.optimizer == None):
