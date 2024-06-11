@@ -11,7 +11,7 @@ class Conv(BaseLayer):
     self.convolution_shape = convolution_shape # 1D : [c,m], 2D : [c,m,n]
     self.num_kernels = num_kernels
     self.stride_2dim = bool(len(self.stride_shape) == 2)
-    self.weights = np.random.rand(self.num_kernels, *self.convolution_shape)
+    self.kernels = np.random.rand(self.num_kernels, *self.convolution_shape)
     self.bias = np.random.rand(self.num_kernels)
     self.gradient_weights_val = None
     self.gradient_bias_val = None
@@ -26,7 +26,7 @@ class Conv(BaseLayer):
     self.output_tensor = np.zeros((self.batchsize, self.num_kernels, *spatial_dimensions))
 
     for batch_num, image in enumerate(self.input_tensor):
-       for kernel_num, kernel in enumerate(self.weights):
+       for kernel_num, kernel in enumerate(self.kernels):
           self.output_tensor[batch_num, kernel_num] = correlate(image, kernel, mode='same')[self.channels//2]
           self.output_tensor[batch_num, kernel_num] += self.bias[kernel_num]
     
@@ -42,7 +42,7 @@ class Conv(BaseLayer):
     else:
       upsampled_error[:, :, ::self.stride_shape[0]] = error_tensor
 
-    gradient_kernel = np.swapaxes(self.weights,1,0)
+    gradient_kernel = np.swapaxes(self.kernels,1,0)
     gradient_kernel = np.fliplr(gradient_kernel)
 
     error_tensor_prev = np.zeros_like(self.input_tensor)
@@ -62,7 +62,7 @@ class Conv(BaseLayer):
       pad_right = (self.convolution_shape[1])//2
       self.input_tensor = (np.pad(self.input_tensor, ((0,0),(0,0),(pad_left, pad_right))))
 
-    self.gradient_weights_val = np.zeros_like(self.weights)
+    self.gradient_weights_val = np.zeros_like(self.kernels)
     self.gradient_bias_val = np.zeros_like(self.bias)
 
     for ele_num, error_ele in enumerate(upsampled_error):
@@ -73,7 +73,7 @@ class Conv(BaseLayer):
         self.gradient_bias_val[error_channel_num] += np.sum(error_channel)
 
     if self.weightoptimizerval is not None :
-        self.weights = self.weightoptimizerval.calculate_update(self.weights, self.gradient_weights_val)
+        self.kernels = self.weightoptimizerval.calculate_update(self.kernels, self.gradient_weights_val)
     if self.biasoptimizerval is not None:
         self.bias = self.biasoptimizerval.calculate_update(self.bias, self.gradient_bias_val)
     
@@ -82,7 +82,7 @@ class Conv(BaseLayer):
   def initialize(self, weights_initializer, bias_initializer):
     fan_in = np.prod(self.convolution_shape)
     fan_out = self.num_kernels * np.prod(self.convolution_shape[1:])
-    self.weights = weights_initializer.initialize(self.weights.shape, fan_in, fan_out)
+    self.kernels = weights_initializer.initialize(self.kernels.shape, fan_in, fan_out)
     self.bias = bias_initializer.initialize(self.bias.shape, fan_in, fan_out)
 
   @property
@@ -109,3 +109,13 @@ class Conv(BaseLayer):
   def optimizer(self, optimizerval):
     self.weightoptimizerval = copy.deepcopy(optimizerval)
     self.biasoptimizerval = copy.deepcopy(optimizerval)
+
+  @property
+  def weights(self):
+    return self.kernels
+  
+  @weights.setter
+  def weights(self, newval):
+    self.kernels = newval
+
+
