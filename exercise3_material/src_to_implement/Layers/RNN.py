@@ -43,8 +43,9 @@ class RNN(Base.BaseLayer):
     def backward(self, error_tensor):
         error_tensor_prev = np.zeros_like(self.input)
 
-        for time in range(self.batchsize):
-            pass
+        for revtime in reversed(range(self.batchsize)):
+            yt_error = self.fc_out.backward(error_tensor[revtime][np.newaxis, :])
+            
 
         return error_tensor_prev
 
