@@ -8,18 +8,18 @@ class FullyConnected(BaseLayer):
     self.input_size = input_size
     self.output_size = output_size
     self.weights = np.random.rand(input_size + 1 , output_size)
-    self.input_tensor = None
+    self.input_tensor_val = None
     self.optimizerval = None
     self.gradient_weightsval = None
 
   def forward(self, input_tensor):
-    batchsize, _ = np.shape(input_tensor)
-    self.input_tensor = np.c_[input_tensor, np.ones(batchsize)]
-    return self.input_tensor @ self.weights    
+    self.batchsize, _ = np.shape(input_tensor)
+    self.input_tensor_val = np.c_[input_tensor, np.ones(self.batchsize)]
+    return self.input_tensor_val @ self.weights    
 
   def backward(self, error_tensor):
     err_prev = error_tensor@self.weights[:-1,:].T
-    self.gradient_weightsval = self.input_tensor.T@error_tensor
+    self.gradient_weightsval = self.input_tensor_val.T@error_tensor
     if(self.optimizerval != None):
       self.weights = self.optimizer.calculate_update(self.weights, self.gradient_weights)
     return err_prev
@@ -44,6 +44,14 @@ class FullyConnected(BaseLayer):
   @gradient_weights.setter
   def gradient_weights(self,newval):
     self.gradient_weightsval = newval
+
+  @property
+  def input_tensor(self):
+    return self.input_tensor_val
+  
+  @input_tensor.setter
+  def input_tensor(self,newval):
+    self.input_tensor_val = np.c_[newval, np.ones(self.batchsize)]
 
   def initialize(self, weights_initializer, bias_initializer):
     input_dim, output_dim = self.weights.shape

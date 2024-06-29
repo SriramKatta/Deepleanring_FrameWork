@@ -25,55 +25,38 @@ class RNN(Base.BaseLayer):
 
     def forward(self, input_tensor):
         self.input = input_tensor
-        self.batchsize = input_tensor.shape[0]
-        self.output = np.zeros((self.batchsize, self.output_size))
+        self.batch_size = input_tensor.shape[0]
+        output = np.zeros((self.batch_size, self.output_size))
         if self.memval == True:
             if self.h_t is None:
-                self.h_t = np.zeros((self.batchsize+1, self.hidden_size))
+                self.h_t = np.zeros((self.batch_size+1, self.hidden_size))
             else :
                 self.h_t[0] = self.h_t_prevbatch
         else:
-            self.h_t = np.zeros_like(self.h_t)
+            self.h_t = np.zeros((self.batch_size, self.output_size))
 
-        self.x_tilde_mem = []
-        self.tanh_mem = []
-        self.sig_mem = []
-        self.h_t_mem = []
-    
-        for time in  range(self.batchsize):
-            xt = input_tensor[time].reshape((1,-1))
-            hidd_t1 = self.h_t[time].reshape((1,-1))
-            x_tilde = np.hstack((hidd_t1, xt))
+        for time in  range(self.batch_size):
+            xt = input_tensor[time][np.newaxis, :]
+            hidd_t1 = self.h_t[time][np.newaxis, :]
+            x_tilde = np.hstack((xt, hidd_t1))
             
             ut = self.fc_hidden.forward(x_tilde)
-            self.x_tilde_mem.append(self.fc_hidden.input_tensor)
-            
-            self.tanh_mem.append(ut)
-            ht = self.tanhlay.forward(ut)
-            
-            self.h_t[time + 1] = ht
-            ot = self.fc_out.forward(ht)
-            self.h_t_mem.append(self.fc_out.input_tensor)
-            self.sig_mem.append(ot)
-            self.output[time] = self.siglayer.forward(ot)
+            self.h_t[time + 1] = self.tanhlay.forward(ut)
+            ot = self.fc_out.forward(self.h_t[time + 1].reshape(1,-1))
+            output[time] = self.siglayer.forward(ot)
 
         self.h_t_prevbatch = self.h_t[-1]
-        return self.output
+        return output
     
     def backward(self, error_tensor):
         error_tensor_prev = np.zeros_like(self.input)
+        hidden_error = np.zeros((1, self.hidden_size))
 
-        for revtime in reversed(range(self.batchsize)):
-            self.siglayer.activation = self.sig_mem[revtime]
-            self.fc_hidden.input_tensor = self.x_tilde_mem[revtime]
-            self.tanhlay.activation = self.tanh_mem[revtime]
-            self.fc_out.input_tensor = self.h_t_mem[revtime]
+        for revtime in reversed(range(self.batch_size)):
+            grad_o_t = self.siglayer.backward(error_tensor[revtime + 1].reshape((1,-1)))
+            self.fc_out.input_tensor_val = self.h_t[revtime + 1]
+            self.fc_out.backward(grad_o_t.reshape(1,-1))
 
-            curr_e_tensor = error_tensor[revtime].reshape((1,-1))
-            curr_e_tensor = self.siglayer.backward(curr_e_tensor)
-            curr_e_tensor = self.fc_hidden.backward(curr_e_tensor)
-            curr_e_tensor = self.tanhlay.backward(curr_e_tensor)
-            error_tensor_prev[revtime] = self.fc_out.backward(curr_e_tensor)
 
         return error_tensor_prev
 
