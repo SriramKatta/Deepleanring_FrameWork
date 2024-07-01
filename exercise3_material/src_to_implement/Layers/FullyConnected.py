@@ -45,14 +45,6 @@ class FullyConnected(BaseLayer):
   def gradient_weights(self,newval):
     self.gradient_weightsval = newval
 
-  @property
-  def input_tensor(self):
-    return self.input_tensor_val
-  
-  @input_tensor.setter
-  def input_tensor(self,newval):
-    self.input_tensor_val = np.c_[newval, np.ones(self.batchsize)]
-
   def initialize(self, weights_initializer, bias_initializer):
     input_dim, output_dim = self.weights.shape
     self.weights[:self.input_size, : ] = weights_initializer.initialize(self.weights[:-1,:].shape, input_dim - 1, output_dim)
