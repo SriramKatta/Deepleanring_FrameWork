@@ -41,10 +41,12 @@ class RNN(Base.BaseLayer):
         self.input_tensor = input_tensor
         self.batch_size = input_tensor.shape[0]
         self.output = np.zeros((self.batch_size, self.output_size))
+        #self.x_tilde_mem = []
         for time, intensor in enumerate(input_tensor):
             x_t = intensor.reshape(1, -1)
             h_t1 = self.hidden_state[-1].reshape(1, -1)
             x_tilde = np.hstack([x_t, h_t1])
+            #self.x_tilde_mem.append(x_tilde)
             u_t = self.fc_hidden.forward(x_tilde)
             self.hidden_state.append(self.tanh_lay.forward(u_t))
             o = self.fc_out.forward(self.hidden_state[-1])
@@ -61,11 +63,16 @@ class RNN(Base.BaseLayer):
 
         # bp through time
         for revtime in reversed(range(error_tensor.shape[0])):
-            x_tilde = np.concatenate((self.input_tensor[revtime, :], self.hidden_state[revtime]), axis=None).reshape(1, -1)
-            u = self.fc_hidden.forward(x_tilde)
-            h = self.tanh_lay.forward(u)
-            o = self.fc_out.forward(h)
-            output = self.sig_lay.forward(o)
+            #forward to set properactivation
+            x_t = self.input_tensor[revtime,:].reshape(1, -1)
+            h_t1 = self.hidden_state[revtime].reshape(1, -1)
+            x_tilde = np.hstack([x_t, h_t1])
+            self.sig_lay.forward(self.fc_out.forward(self.tanh_lay.forward(self.fc_hidden.forward(x_tilde))))
+            #setting proper activations for all layers
+            #self.fc_hidden.activation = self.x_tilde_mem[revtime]
+            #self.tanh_lay.activation = self.hidden_state[revtime]
+            #self.fc_out.activation = self.hidden_state[revtime]
+            #self.sig_lay.activation = self.output[revtime]
             # backward
             grad = self.sig_lay.backward(error_tensor[revtime, :])
             grad = self.fc_out.backward(grad) + error_h

@@ -50,3 +50,11 @@ class FullyConnected(BaseLayer):
     self.weights[:self.input_size, : ] = weights_initializer.initialize(self.weights[:-1,:].shape, input_dim - 1, output_dim)
     self.weights[-1, :] = bias_initializer.initialize(self.weights[-1,:].shape, input_dim - 1, output_dim)
   
+  @property
+  def activation(self):
+    return self.input_tensor_val
+  
+  @activation.setter
+  def activation(self, new_ten):
+    self.input_tensor_val = np.c_[new_ten, np.ones(self.batchsize)]
+  
