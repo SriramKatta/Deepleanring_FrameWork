@@ -21,10 +21,10 @@ class ResBlock(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride_shape, 1)
         self.batch_norm1 = nn.BatchNorm2d(out_channels)
         self.relu_1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1)
         self.batch_norm2 = nn.BatchNorm2d(out_channels)
         self.residual_conv = True
-        self.conv2 = nn.Conv2d(in_channels, out_channels, 1, stride_shape)
+        self.conv1X1 = nn.Conv2d(in_channels, out_channels, 1, stride_shape)
         if in_channels == out_channels and stride_shape == 1:
             self.residual_conv = False
         else:
@@ -40,10 +40,7 @@ class ResBlock(nn.Module):
         self.residual = input_tensor
         output_tensor = self.seq(input_tensor)
         if self.residual_conv:
-            #self.cnt +=1
-            self.residual = self.conv2(self.residual)
-            #print(self.cnt)
-        # Now normalize the residual
+            self.residual = self.conv1X1(self.residual)
         self.residual = self.batch_norm3(self.residual)
         output_tensor += self.residual
         output_tensor = self.relu_3(output_tensor)
@@ -60,23 +57,20 @@ class ResNet(nn.Module):
         )
 
         self.seq2 = nn.Sequential(
-            ResBlock(64, 64, 1),
+            ResBlock(64, 64),
             ResBlock(64, 128, 2),
             ResBlock(128, 256, 2),
-            nn.Dropout(p=0.5),
+            nn.Dropout(),
             ResBlock(256, 512, 2)
         )
 
         self.seq3 = nn.Sequential(
             nn.AvgPool2d(10),
             Flatten(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(),
             nn.Linear(512, 2),
             nn.Sigmoid()
         )
 
     def forward(self, input_tensor):
-        output_tensor = self.seq1(input_tensor)
-        output_tensor = self.seq2(output_tensor)
-        output_tensor = self.seq3(output_tensor)
-        return output_tensor
+        return self.seq3(self.seq2(self.seq1(input_tensor)))
