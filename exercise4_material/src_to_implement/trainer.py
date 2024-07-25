@@ -1,4 +1,3 @@
-import numpy as np
 import torch as t
 from sklearn.metrics import f1_score
 
@@ -124,8 +123,7 @@ class Trainer:
                     y = y.cpu()
                 pred = pred
                 preds.extend(pred)
-                labels.extend(y.numpy())
-            preds, labels = np.array(preds), np.array(labels)
+                labels.extend(y)
             score = f1_score(labels, preds, average='micro')
         return avg_loss, score
         
@@ -134,36 +132,32 @@ class Trainer:
         assert self.early_stopping_patience_val > 0 or epochs > 0
         # create a list for the train and validation losses, and create a counter for the epoch 
         #TODO
+        # stop by epoch number
+        # train for a epoch and then calculate the loss and metrics on the validation set
+        # append the losses to the respective lists
+        # use the save_checkpoint function to save the model (can be restricted to epochs with improvement)
+        # check whether early stopping should be performed using the early stopping criterion and stop if so
+        # return the losses for both training and validation
+        #TODO
         train_losses = []
         val_losses = []
-        val_metrics = []
-        epoch_n = 0
-        
+        epoch = 0
         while True:
-            # stop by epoch number
-            # train for a epoch and then calculate the loss and metrics on the validation set
-            # append the losses to the respective lists
-            # use the save_checkpoint function to save the model (can be restricted to epochs with improvement)
-            # check whether early stopping should be performed using the early stopping criterion and stop if so
-            # return the losses for both training and validation
-            #TODO
-            if epoch_n == epochs:
+            if epoch == epochs:
                 break
-            print('Epoch: %3d'%(epoch_n+1))
+            print('Epoch: ',(epoch+1))
             train_loss = self.train_epoch()
-            val_loss, val_metric = self.val_test()
+            val_loss, _ = self.val_test()
             
             if len(val_losses) != 0 and val_loss < min(val_losses):
-                self.save_checkpoint(epoch_n)
+                self.save_checkpoint(epoch)
             
             train_losses.append(train_loss)
             val_losses.append(val_loss)
-            val_metrics.append(val_metric)
 
             if self.early_stopping_patience_val > 0:
                 if len(val_losses) > self.early_stopping_patience_val:
                     if val_losses[-1] > val_losses[-self.early_stopping_patience_val-1]:
                         break
-            epoch_n += 1
-            print('\tTrain Loss: %.4f\tVal Loss: %.4f\tVal Metric: %.4f'%(train_loss, val_loss, val_metric))
-        return train_losses, val_losses, val_metrics
+            epoch += 1
+        return train_losses, val_losses
